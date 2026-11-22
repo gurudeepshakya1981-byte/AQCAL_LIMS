@@ -47,6 +47,7 @@
             const u3 = parseFloat(document.getElementById('u3').value);
             const u4 = parseFloat(document.getElementById('u4').value);
 
+            // Note: This is calling the /calculate endpoint we built
             const response = await fetch('/calculate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -55,6 +56,11 @@
 
             const data = await response.json();
             
+            if (data.error) {
+                alert("Error: " + data.error);
+                return;
+            }
+
             document.getElementById('uc_val').innerText = data.combined_uncertainty.toFixed(6);
             document.getElementById('U_val').innerText = data.expanded_uncertainty.toFixed(6);
             document.getElementById('result').style.display = 'block';

@@ -1,7 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from fastapi import Request
 import os
 import psycopg2
 from pydantic import BaseModel
@@ -20,16 +19,18 @@ class CalcRequest(BaseModel):
     u3: float
     u4: float
 
-# This serves the beautiful HTML page
 @app.get("/", response_class=HTMLResponse)
 def read_root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    # This is the new, correct way to serve the HTML template
+    return templates.TemplateResponse(request=request, name="index.html")
 
 @app.post("/calculate")
 def calculate_and_save(req: CalcRequest):
+    # 1. Do the math
     uc = (req.u1**2 + req.u2**2 + req.u3**2 + req.u4**2) ** 0.5
     U = uc * 2
     
+    # 2. Save to Neon Database
     try:
         conn = get_db_connection()
         cur = conn.cursor()
@@ -50,8 +51,9 @@ def calculate_and_save(req: CalcRequest):
     except Exception as e:
         return {"error": str(e)}
 
+    # 3. Return result
     return {
         "combined_uncertainty": uc, 
         "expanded_uncertainty": U,
-        "message": "Successfully saved!"
+        "message": "Successfully saved to database!"
     }
